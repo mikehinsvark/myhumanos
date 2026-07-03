@@ -101,6 +101,743 @@ Error generating stack: `+l.message+`
     			domain: window.location.host
   			}
 			})
-		</script></body>
+		</script>
+<!-- HIOS STUDY PORTAL + ACCORDION INJECTION -->
+<style>
+/* ===== STUDY ONLINE BUTTON (floating) ===== */
+.hios-study-btn {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #00d4aa, #4da6ff);
+  color: #050d1a;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  box-shadow: 0 4px 24px rgba(0,212,170,0.4);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.hios-study-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0,212,170,0.5);
+}
+.hios-study-btn svg { flex-shrink: 0; }
+
+/* ===== STUDY PORTAL OVERLAY ===== */
+.hios-portal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9100;
+  background: rgba(5,13,26,0.92);
+  backdrop-filter: blur(8px);
+  animation: hiosFadeIn 0.25s ease;
+}
+.hios-portal-overlay.open { display: flex; flex-direction: column; }
+@keyframes hiosFadeIn { from { opacity:0 } to { opacity:1 } }
+
+.hios-portal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 28px;
+  border-bottom: 1px solid rgba(0,212,170,0.2);
+  flex-shrink: 0;
+}
+.hios-portal-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.hios-portal-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: rgba(0,212,170,0.15);
+  border: 1px solid rgba(0,212,170,0.4);
+  border-radius: 20px;
+  color: #00d4aa;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  font-family: 'Space Grotesk', sans-serif;
+}
+.hios-portal-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(1.1rem, 3vw, 1.5rem);
+  font-weight: 700;
+  color: #e8f4f1;
+  margin: 0;
+}
+.hios-portal-subtitle {
+  color: rgba(232,244,241,0.6);
+  font-size: 13px;
+  margin: 0;
+  font-family: 'DM Sans', sans-serif;
+}
+.hios-portal-close {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #e8f4f1;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.hios-portal-close:hover { background: rgba(255,255,255,0.15); }
+
+.hios-portal-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Left nav */
+.hios-portal-nav {
+  width: 280px;
+  flex-shrink: 0;
+  border-right: 1px solid rgba(0,212,170,0.15);
+  overflow-y: auto;
+  padding: 16px 0;
+}
+.hios-portal-nav-label {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: rgba(232,244,241,0.4);
+  padding: 0 20px 8px;
+  text-transform: uppercase;
+}
+.hios-nav-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: all 0.15s;
+}
+.hios-nav-item:hover { background: rgba(0,212,170,0.06); }
+.hios-nav-item.active {
+  background: rgba(0,212,170,0.1);
+  border-left-color: #00d4aa;
+}
+.hios-nav-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(0,212,170,0.4);
+  margin-top: 5px;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.hios-nav-item.active .hios-nav-dot { background: #00d4aa; }
+.hios-nav-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #e8f4f1;
+  line-height: 1.3;
+}
+.hios-nav-sub {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  color: rgba(232,244,241,0.45);
+  margin-top: 2px;
+  line-height: 1.3;
+}
+
+/* Right content */
+.hios-portal-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px 40px;
+  min-width: 0;
+}
+.hios-module-content { display: none; }
+.hios-module-content.active { display: block; }
+
+.hios-mod-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-weight: 700;
+  color: #e8f4f1;
+  margin: 0 0 8px;
+}
+.hios-mod-tagline {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  color: #00d4aa;
+  font-style: italic;
+  margin: 0 0 20px;
+  line-height: 1.5;
+}
+.hios-divider {
+  height: 1px;
+  background: linear-gradient(90deg, rgba(0,212,170,0.4), transparent);
+  margin-bottom: 28px;
+}
+.hios-section-h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #00d4aa;
+  margin: 28px 0 12px;
+}
+.hios-section-p {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  line-height: 1.8;
+  color: rgba(232,244,241,0.85);
+  margin: 0 0 16px;
+}
+.hios-section-li {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  line-height: 1.75;
+  color: rgba(232,244,241,0.8);
+  margin: 0 0 12px;
+  padding-left: 16px;
+  border-left: 2px solid rgba(0,212,170,0.3);
+}
+
+/* ===== ACCORDION STYLES ===== */
+.hios-acc-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  color: inherit;
+  text-align: left;
+  gap: 8px;
+}
+.hios-acc-arrow {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(0,212,170,0.12);
+  border: 1px solid rgba(0,212,170,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.3s, background 0.2s;
+  color: #00d4aa;
+  font-size: 12px;
+}
+.hios-acc-arrow.open {
+  transform: rotate(180deg);
+  background: rgba(0,212,170,0.2);
+}
+.hios-acc-body {
+  display: none;
+  padding: 16px 0 8px;
+  border-top: 1px solid rgba(0,212,170,0.1);
+  margin-top: 12px;
+  animation: hiosSlideDown 0.25s ease;
+}
+.hios-acc-body.open { display: block; }
+@keyframes hiosSlideDown {
+  from { opacity:0; transform:translateY(-8px) }
+  to { opacity:1; transform:translateY(0) }
+}
+.hios-acc-tagline {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: #00d4aa;
+  font-style: italic;
+  margin: 0 0 14px;
+  line-height: 1.5;
+}
+.hios-acc-h4 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(0,212,170,0.8);
+  margin: 14px 0 8px;
+}
+.hios-acc-p {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  line-height: 1.7;
+  color: rgba(232,244,241,0.75);
+  margin: 0 0 10px;
+}
+.hios-acc-li {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  line-height: 1.65;
+  color: rgba(232,244,241,0.7);
+  margin: 0 0 8px;
+  padding-left: 12px;
+  border-left: 2px solid rgba(0,212,170,0.25);
+}
+.hios-acc-study-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 7px 14px;
+  background: rgba(0,212,170,0.1);
+  border: 1px solid rgba(0,212,170,0.3);
+  border-radius: 20px;
+  color: #00d4aa;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  text-decoration: none;
+}
+.hios-acc-study-link:hover { background: rgba(0,212,170,0.18); }
+
+/* Mobile responsive */
+@media (max-width: 700px) {
+  .hios-portal-nav { width: 220px; }
+  .hios-portal-content { padding: 20px 18px; }
+  .hios-portal-header { padding: 12px 16px; }
+  .hios-portal-subtitle { display: none; }
+}
+@media (max-width: 500px) {
+  .hios-portal-nav { display: none; }
+  .hios-portal-body { flex-direction: column; }
+  .hios-study-btn { bottom: 16px; right: 16px; padding: 10px 16px; font-size: 13px; }
+}
+</style>
+
+<!-- STUDY ONLINE FLOATING BUTTON -->
+<button class="hios-study-btn" onclick="hiosOpenPortal()">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+  </svg>
+  STUDY ONLINE
+</button>
+
+<!-- STUDY PORTAL OVERLAY -->
+<div class="hios-portal-overlay" id="hiosPortal">
+  <div class="hios-portal-header">
+    <div class="hios-portal-header-left">
+      <div>
+        <div class="hios-portal-badge">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          STUDY ONLINE
+        </div>
+        <h2 class="hios-portal-title">Interactive Deep Study Portal</h2>
+        <p class="hios-portal-subtitle">Study all 11 modules of The Human OS directly in your browser. Navigate chapters and master each concept.</p>
+      </div>
+    </div>
+    <button class="hios-portal-close" onclick="hiosClosePortal()">✕</button>
+  </div>
+  <div class="hios-portal-body">
+    <div class="hios-portal-nav">
+      <div class="hios-portal-nav-label">Select Module</div>
+      <div class="hios-nav-item" data-module="00" onclick="hiosShowModule('00')"><span class="hios-nav-dot"></span><div><div class="hios-nav-title">00 · Reality Gap</div><div class="hios-nav-sub">You don't see reality. You see what survives your ...</div></div></div>
+<div class="hios-nav-item" data-module="01" onclick="hiosShowModule('01')"><span class="hios-nav-dot"></span><div><div class="hios-nav-title">01 · Attention OS</div><div class="hios-nav-sub">Whatever runs your attention runs your life....</div></div></div>
+<div class="hios-nav-item" data-module="02" onclick="hiosShowModule('02')"><span class="hios-nav-dot"></span><div><div class="hios-nav-title">02 · State OS</div><div class="hios-nav-sub">Threat narrows perception. Calm widens it. State c...</div></div></div>
+<div class="hios-nav-item" data-module="03" onclick="hiosShowModule('03')"><span class="hios-nav-dot"></span><div><div class="hios-nav-title">03 · Perspective OS</div><div class="hios-nav-sub">Perception is the view from inside your head. Pers...</div></div></div>
+<div class="hios-nav-item" data-module="04" onclick="hiosShowModule('04')"><span class="hios-nav-dot"></span><div><div class="hios-nav-title">04 · Learning OS</div><div class="hios-nav-sub">Real learning starts with exposure, not mastery....</div></div></div>
+<div class="hios-nav-item" data-module="05" onclick="hiosShowModule('05')"><span class="hios-nav-dot"></span><div><div class="hios-nav-title">05 · Language OS</div><div class="hios-nav-sub">The brain follows the label. Choose the label....</div></div></div>
+<div class="hios-nav-item" data-module="06" onclick="hiosShowModule('06')"><span class="hios-nav-dot"></span><div><div class="hios-nav-title">06 · Paradigm OS</div><div class="hios-nav-sub">The paradigm is the layer below everything — it fi...</div></div></div>
+<div class="hios-nav-item" data-module="07" onclick="hiosShowModule('07')"><span class="hios-nav-dot"></span><div><div class="hios-nav-title">07 · Decision OS</div><div class="hios-nav-sub">Smart people make bad calls — here's the operating...</div></div></div>
+<div class="hios-nav-item" data-module="08" onclick="hiosShowModule('08')"><span class="hios-nav-dot"></span><div><div class="hios-nav-title">08 · Influence OS</div><div class="hios-nav-sub">Influence in service is leadership. Influence at e...</div></div></div>
+<div class="hios-nav-item" data-module="09" onclick="hiosShowModule('09')"><span class="hios-nav-dot"></span><div><div class="hios-nav-title">09 · AI Leverage OS</div><div class="hios-nav-sub">The advantage belongs to the better operator, not ...</div></div></div>
+<div class="hios-nav-item" data-module="10" onclick="hiosShowModule('10')"><span class="hios-nav-dot"></span><div><div class="hios-nav-title">10 · The Cheat Sheet</div><div class="hios-nav-sub">Ten operating commands that run the whole system....</div></div></div>
+
+    </div>
+    <div class="hios-portal-content" id="hiosPortalContent">
+      <div class="hios-module-content" id="hios-mod-00" style="display:none">
+<h2 class="hios-mod-title">00 · Reality Gap</h2>
+<p class="hios-mod-tagline">You don't see reality. You see what survives your filters.</p>
+<div class="hios-divider"></div>
+<h3 class="hios-section-h3">The Idea in Plain English</h3>
+<p class="hios-section-p">Perception is not a recording of the world — it is a construction. Your senses take in an estimated eleven million bits of information every second. Your conscious mind processes somewhere around forty of them. That means more than 99.999% of reality is filtered out, discarded, or rewritten before you ever experience a single thing. You are never seeing the world. You are seeing a tiny, edited highlight reel your brain assembled for you — and then mistaking the highlight reel for the whole movie. It isn't a flaw — it is survival engineering. The brain can't afford to process everything, so it runs a shortcut: it predicts what's there, then lightly checks the prediction against your senses. This is why you miss your own typo, why the second coat of paint 'looks the same,' and why you can drive home and remember none of the drive.</p>
+<h3 class="hios-section-h3">Analogies That Make It Stick</h3>
+<p class="hios-section-li"><strong>The trailer vs. the movie.</strong> The forty bits you receive are the trailer — a curated highlight reel assembled by a brain that already has opinions. The movie is eleven million bits long and you never see it. Most people negotiate with the trailer as if it were the full film.</p>
+<p class="hios-section-li"><strong>The map vs. the territory.</strong> Everyone is navigating a personal map and mistaking it for the territory. The moment you can see your own map as a map, you can redraw it, question it, or borrow someone else's. That is the whole game.</p>
+<p class="hios-section-li"><strong>The autocomplete brain.</strong> Your brain doesn't wait for all the data before deciding what it sees — it autocompletes, the way a phone keyboard finishes your sentence. Most of the time it's right enough. The problem is when it's wrong and you never check, because the autocomplete felt like direct perception.</p>
+<h3 class="hios-section-h3">How to Catch the Filter in the Act</h3>
+<p class="hios-section-li">When you have a strong reaction, ask: <em>What did the camera actually record?</em> Separate the raw event from your interpretation of it.</p>
+<p class="hios-section-li">Notice when two people in the same room describe the same event differently — not because one is lying, but because they ran different filters.</p>
+<p class="hios-section-li">Ask: <em>What would I have to believe for this to look completely different?</em> That question surfaces the filter.</p>
+<h3 class="hios-section-h3">The Core Principle</h3>
+<p class="hios-section-p">THE MAP IS NOT THE TERRITORY. Everyone is navigating a personal map and mistaking it for the territory. The moment you can see your own map as a map, you can redraw it, question it, or borrow someone else's. That is the whole game. <em>One-sentence takeaway: The forty bits you receive are the trailer — not the movie — and the upgrade begins the moment you stop negotiating with the trailer as if it were the full film.</em></p>
+</div>
+<div class="hios-module-content" id="hios-mod-01" style="display:none">
+<h2 class="hios-mod-title">01 · Attention OS</h2>
+<p class="hios-mod-tagline">Whatever runs your attention runs your life.</p>
+<div class="hios-divider"></div>
+<h3 class="hios-section-h3">The Idea in Plain English</h3>
+<p class="hios-section-p">Attention is not passive — it is the most powerful filter in the system. Of the forty bits that make it through the Reality Gap, your attention decides which ones become conscious experience. Whatever you point your flashlight at, the brain amplifies. Whatever you ignore, it suppresses. This means attention is not just how you experience the world — it is how you construct it. The person who walks into a room looking for problems finds them. The person who walks in looking for opportunities finds those instead. Same room. Different flashlight.</p>
+<h3 class="hios-section-h3">Analogies That Make It Stick</h3>
+<p class="hios-section-li"><strong>The flashlight in a dark room.</strong> The room is full of objects, but you only see what the beam hits. Attention is the flashlight. You don't choose what's in the room — you choose where to point the light. Most people let the flashlight point itself.</p>
+<p class="hios-section-li"><strong>The search engine.</strong> Whatever you type into the search bar, the engine returns matching results. Attention works the same way. Tell your brain to find evidence that you're behind, and it will find it. Tell it to find the next move, and it will find that instead. The query determines the results.</p>
+<p class="hios-section-li"><strong>The spotter in the gym.</strong> A spotter doesn't lift the weight — they make sure the weight goes where it's supposed to go. Directed attention is the spotter for your thinking.</p>
+<h3 class="hios-section-h3">Real-World Examples</h3>
+<p class="hios-section-li"><strong>The new car effect.</strong> You buy a blue Honda and suddenly see blue Hondas everywhere. They were always there — your attention filter just wasn't set for them. This is the Reticular Activating System (RAS) at work: it surfaces what you've told it to look for.</p>
+<p class="hios-section-li"><strong>The worried leader.</strong> A leader who wakes up focused on what could go wrong will find evidence all day that things are going wrong. A leader who wakes up focused on what's working will find evidence of that instead. Same team, same day, different attention setting.</p>
+<p class="hios-section-li"><strong>The pre-game question.</strong> Elite athletes and coaches use a single pre-performance question to set the attention filter before competition: <em>What am I here to do?</em> It sounds simple. It works because it points the flashlight before the noise starts.</p>
+<h3 class="hios-section-h3">The Practice</h3>
+<p class="hios-section-p">Before every significant block of time, write one sentence: <em>What am I hunting for in the next 30 minutes?</em> That sentence sets the search query. It doesn't guarantee results — it guarantees that your brain is looking for the right thing instead of whatever grabbed it last. The most expensive attention mistake is not distraction — it's misdirection: working hard with the flashlight pointed at the wrong wall. <em>One-sentence takeaway: Direct your focus instead of being pulled by noise, fear, and urgency — because the brain finds what it's told to look for, and most people never tell it anything.</em></p>
+</div>
+<div class="hios-module-content" id="hios-mod-02" style="display:none">
+<h2 class="hios-mod-title">02 · State OS</h2>
+<p class="hios-mod-tagline">Threat narrows perception. Calm widens it. State comes first.</p>
+<div class="hios-divider"></div>
+<h3 class="hios-section-h3">The Idea in Plain English</h3>
+<p class="hios-section-p">Your physical and emotional state is not a background condition — it is a filter that runs on top of everything else in this system. A brain in threat mode and a brain in calm mode are not the same instrument. Threat mode narrows perception, shrinks the option set, and hands control to the oldest, most reactive part of the brain. Calm mode widens perception, expands the option set, and gives the thinking brain full power. This means that before you can apply any other module in this system, you have to check the state of the instrument you're using to apply it.</p>
+<h3 class="hios-section-h3">Analogies That Make It Stick</h3>
+<p class="hios-section-li"><strong>The smoke alarm.</strong> The threat system is a smoke alarm — it's designed to be fast and loud, not accurate. It can't tell the difference between a house fire and burnt toast. When it goes off, it pulls resources away from the thinking brain and hands them to the survival brain. Smart engineering — when a bear is chasing you, you don't need calculus. The problem: the smoke alarm can't tell a bear from a difficult conversation.</p>
+<p class="hios-section-li"><strong>The instrument panel in turbulence.</strong> A pilot in turbulence has the same instruments as a pilot in clear air — but in turbulence, the readings are harder to trust and the inputs are harder to control. State is the turbulence. Calm state is clear air. You can fly in both, but you need to know which one you're in.</p>
+<p class="hios-section-li"><strong>The 5 p.m. problem.</strong> The problem that looked fatal at 5 p.m. is routinely solvable at 8 a.m. — and nothing about the problem changed. What changed was the state of the instrument reading it.</p>
+<h3 class="hios-section-h3">Real-World Examples</h3>
+<p class="hios-section-li"><strong>HALT.</strong> The single most useful state check: Am I Hungry, Angry, Lonely, or Tired? Any one of these degrades decision quality. Two or more and you're operating a compromised instrument. Rule: no one-way doors get opened in a bad state.</p>
+<p class="hios-section-li"><strong>The pre-conversation reset.</strong> Before a high-stakes conversation, take 90 seconds: slow the breath, name the state you're in, and set the intention. Not to calm down — to widen the aperture before you walk in.</p>
+<p class="hios-section-li"><strong>Name it to tame it.</strong> Labeling an emotion — 'I'm feeling anxious' — reduces its intensity by engaging the prefrontal cortex. The act of naming moves you from being inside the state to observing it. That gap is where the operating system lives.</p>
+<h3 class="hios-section-h3">The Practice</h3>
+<p class="hios-section-p">Run HALT before any significant decision, conversation, or creative work. If you hit a yes on any of the four, fix the body before you trust the brain. This is not weakness — it is instrument calibration. The best thinkers in the world still make terrible decisions when they're depleted. The difference is they know it and wait. <em>One-sentence takeaway: Regulate your state before you trust your thinking — because a depleted instrument produces depleted results, and the most important variable in any high-stakes moment is the condition of the brain running it.</em></p>
+</div>
+<div class="hios-module-content" id="hios-mod-03" style="display:none">
+<h2 class="hios-mod-title">03 · Perspective OS</h2>
+<p class="hios-mod-tagline">Perception is the view from inside your head. Perspective is the ability to step outside it.</p>
+<div class="hios-divider"></div>
+<h3 class="hios-section-h3">The Idea in Plain English</h3>
+<p class="hios-section-p">Every person in every interaction is looking at the same situation from a different camera angle. The amateur tries to convince the other person to see their angle. The professional steps behind the glass and runs all the cameras simultaneously. This is not empathy as a soft skill — it is a cognitive capability that produces better information, better decisions, and better outcomes in every domain where other humans are involved.</p>
+<h3 class="hios-section-h3">The Amateur Convinces. The Professional Sees.</h3>
+<p class="hios-section-p">The amateur walks into a negotiation, a sales conversation, or a difficult discussion with one goal: get the other person to see what I see. The professional walks in with a different goal: understand what they see so completely that I can use it. The amateur is running one camera. The professional is running four. The best map in the room wins — and the professional has the best map because they built it from multiple angles.</p>
+<h3 class="hios-section-h3">The Two-Minute Drill</h3>
+<p class="hios-section-li"><strong>Their chair.</strong> What does this look like from where they're sitting? What are their pressures, their fears, their goals? What would they have to believe for their behavior to make complete sense?</p>
+<p class="hios-section-li"><strong>The neutral observer.</strong> If a fair-minded third party watched this interaction, what would they see? What would they say each side is actually doing vs. what each side thinks they're doing?</p>
+<p class="hios-section-li"><strong>The competitor.</strong> What would someone who wanted the opposite outcome do with this situation? What are they seeing that I might be missing?</p>
+<p class="hios-section-li"><strong>The coach.</strong> What would the best version of me do here? What would someone I deeply respect advise if they could see the whole picture?</p>
+<h3 class="hios-section-h3">The Practice</h3>
+<p class="hios-section-p">Before any high-stakes conversation or decision, run the two-minute drill. One sentence per chair. Total time: two minutes. You walk in holding the multi-angle replay while everyone else is trapped in one camera. This is not about being nice — it's about having better information than anyone else in the room. <em>One-sentence takeaway: Step behind the glass and run all four cameras — because the person with the best map of the territory always has the advantage, and the map is built from multiple angles, not one.</em></p>
+</div>
+<div class="hios-module-content" id="hios-mod-04" style="display:none">
+<h2 class="hios-mod-title">04 · Learning OS</h2>
+<p class="hios-mod-tagline">Real learning starts with exposure, not mastery.</p>
+<div class="hios-divider"></div>
+<h3 class="hios-section-h3">The Idea in Plain English</h3>
+<p class="hios-section-p">Most people misunderstand how learning works — and that misunderstanding causes them to quit at exactly the wrong moment. Learning is not a straight line from ignorance to competence. It is a layered process that requires multiple passes, and the first pass is supposed to feel like failure. The coat hook principle explains why: new information has nothing to stick to on the first pass. The hooks aren't there yet. The material slides off — and the learner concludes they're not good at this. They're not bad at it. They're on pass one.</p>
+<h3 class="hios-section-h3">The Coat Hook Principle</h3>
+<p class="hios-section-p">Imagine a bare wall. You throw a coat at it. It falls. You throw another. It falls. You throw ten coats — they all fall. You conclude: this wall doesn't hold coats. But the wall isn't the problem. The hooks aren't there yet. Pass one of learning installs the hooks. Pass two, a few things catch. Pass three, the shape of the whole thing appears. Pass four, you can use it. Nobody skips the ladder — the pros just stopped mislabeling rung one as failure.</p>
+<h3 class="hios-section-h3">What Hooks Look Like in Real Life</h3>
+<p class="hios-section-li">The first time you hear a concept, it feels abstract and slippery. That's pass one installing hooks.</p>
+<p class="hios-section-li">The second time, you recognize it — 'oh, that thing.' The hook caught. That recognition IS the learning.</p>
+<p class="hios-section-li">The third time, you see the structure — how it connects to other things you know. Now you have a framework.</p>
+<p class="hios-section-li">The fourth time, you can use it — explain it, apply it, teach it. This is what people call 'getting it.'</p>
+<h3 class="hios-section-h3">The AI Multiplier</h3>
+<p class="hios-section-p">AI can compress the ladder by buying you extra rungs faster. Use it to get a second pass on something you just encountered: 'Explain this to me as if I've heard it once but it hasn't clicked yet.' Use it to build hooks deliberately: 'Give me three analogies for this concept from completely different domains.' Use it to test your structure: 'Ask me questions about this until I can explain it back clearly.' The ladder still exists — AI just lets you climb it faster. <em>One-sentence takeaway: You don't climb the ladder in one jump — you climb it one rung at a time, and the pros stopped mislabeling rung one as failure.</em></p>
+</div>
+<div class="hios-module-content" id="hios-mod-05" style="display:none">
+<h2 class="hios-mod-title">05 · Language OS</h2>
+<p class="hios-mod-tagline">The brain follows the label. Choose the label.</p>
+<div class="hios-divider"></div>
+<h3 class="hios-section-h3">The Idea in Plain English</h3>
+<p class="hios-section-p">Language is not just how you describe your experience — it is how you construct it. The label you put on a moment determines what your brain searches for next. 'I can't do this' sends the brain hunting for evidence of inability. 'I haven't found the way in yet' sends it hunting for entry points. Same moment. Different search. Different results. This is not positive thinking — it is search query management.</p>
+<h3 class="hios-section-h3">The Two-Mode Brain</h3>
+<p class="hios-section-p">Threat mode is the older system — the smoke alarm. Its playbook has exactly three moves: fight, flee, freeze. When it takes over, it pulls resources away from the part of your brain that solves complex problems. The smoke alarm can't tell a bear from a spreadsheet you don't understand. It only reads the label you feed it. And 'I can't do this' reads, to the alarm, exactly like 'bear.' So it triggers, the thinking brain goes dim — and now you literally can't do this. The label made itself true by shutting down the equipment you needed. Solve mode is the opposite: alarm quiet, thinking brain fully powered, attention pointed outward at the puzzle instead of inward at the danger.</p>
+<h3 class="hios-section-h3">The Two Searches, Side by Side</h3>
+<p class="hios-section-p">Take the exact same moment — forty minutes into learning something new, nothing clicking. 'This is impossible.' The brain searches for supporting results: every past struggle, everyone who seems naturally better, the sunk time, the exit. None of those results are next moves. The search for 'impossible' returns zero actionable steps by definition. 'I found the part my brain hasn't organized yet.' Same forty minutes, same confusion. But this query sends the brain hunting for structure: which part, exactly? Where does my understanding stop? The results come back as locations and moves — the only things a learner can act on.</p>
+<h3 class="hios-section-h3">The Practice — Catch and Swap</h3>
+<p class="hios-section-li"><strong>Hear it.</strong> The shutdown labels are audible — 'can't,' 'impossible,' 'terrible,' 'never,' 'always.' Treat those five words like a metal detector beep.</p>
+<p class="hios-section-li"><strong>Don't argue — replace it.</strong> You can't delete a search query; you can only run a better one. No debating whether you're 'really' terrible. Just submit the new query: 'Which part exactly, and what's the smallest next move?'</p>
+<p class="hios-section-li"><strong>Say the new label out loud.</strong> Spoken language grabs the attention system harder than silent thought. Feels ridiculous. Works anyway.</p>
+<p class="hios-section-li"><strong>Watch what the new search returns.</strong> Actually notice that the new label produced a next move where the old one produced a wall.</p>
+</div>
+<div class="hios-module-content" id="hios-mod-06" style="display:none">
+<h2 class="hios-mod-title">06 · Paradigm OS</h2>
+<p class="hios-mod-tagline">The paradigm is the layer below everything — it filters what a person can even accept as possible.</p>
+<div class="hios-divider"></div>
+<h3 class="hios-section-h3">The Idea in Plain English</h3>
+<p class="hios-section-p">A paradigm is not a belief — it is the frame that makes certain beliefs feel like facts. It operates below the level of conscious thought, which is why it's so hard to see. The Reality Gap (Module 00) showed us that perception is filtered. The paradigm is the filter behind the filter — the assumption so deep it doesn't feel like an assumption. It feels like the way things are.</p>
+<h3 class="hios-section-h3">Analogies That Make It Stick</h3>
+<p class="hios-section-li"><strong>The camera lens vs. the photograph.</strong> A paradigm is not a photo — it's the lens. The photo can be wrong and you can see it. The lens distorts everything and you never notice, because you're always looking through it, never at it.</p>
+<p class="hios-section-li"><strong>The fish and the water.</strong> A fish doesn't know it's in water — water is just the world. A paradigm is the water. The moment you can name it, you're no longer fully inside it.</p>
+<p class="hios-section-li"><strong>The operating system, not the app.</strong> Beliefs are apps. A paradigm is the OS. You can update the apps all you want — if the OS is running a bad assumption, the apps will keep producing the same output.</p>
+<h3 class="hios-section-h3">Real-World Examples</h3>
+<p class="hios-section-li"><strong>The income ceiling.</strong> A rep who grew up in a household where 'people like us don't make that kind of money' has a paradigm that will filter out evidence of high income being possible — and filter in evidence that confirms the ceiling. The ceiling isn't in the market. It's in the OS.</p>
+<p class="hios-section-li"><strong>The trust paradigm.</strong> A leader who was burned early by a trusted partner may run a paradigm that says 'people eventually let you down.' That paradigm will find evidence everywhere — because it's looking for it — and will make it hard to build the deep partnerships that compound over time.</p>
+<p class="hios-section-li"><strong>The effort paradigm.</strong> 'Success requires suffering' is a paradigm, not a fact. It produces a person who can't enjoy the easy win — because easy wins don't fit the frame. They'll unconsciously make things harder to confirm what they already believe.</p>
+<h3 class="hios-section-h3">How to Find a Paradigm</h3>
+<p class="hios-section-p">You can't see a paradigm by looking directly at it — you find it by looking at its outputs. When the same result keeps repeating despite different inputs, stop blaming the photos and check the lens. Write the sentence you'd have to believe for the stuck result to make sense — then ask who installed it and whether you'd hire them today to run your operating system. <em>One-sentence takeaway: A label filters a moment and a paradigm filters a life — so the most valuable sentence you'll ever write is the assumption you'd have to hold for your current results to make perfect sense.</em></p>
+</div>
+<div class="hios-module-content" id="hios-mod-07" style="display:none">
+<h2 class="hios-mod-title">07 · Decision OS</h2>
+<p class="hios-mod-tagline">Smart people make bad calls — here's the operating system that fixes it.</p>
+<div class="hios-divider"></div>
+<h3 class="hios-section-h3">The Idea in Plain English</h3>
+<p class="hios-section-p">You can't control outcomes. You can only control decision quality — and decision quality is a process you can rep. Everything in the system funnels into this module, because thinking clearly is worthless until it becomes a choice. The single most important idea: a good decision and a good outcome are not the same thing. Poker players have a word for confusing them — 'resulting.' You can play a hand perfectly and lose; you can play like an idiot and win. Judge yourself and others by the quality of the decision with the information available at the time, not by how the cards fell.</p>
+<h3 class="hios-section-h3">Analogies That Make It Stick</h3>
+<p class="hios-section-li"><strong>The two kinds of doors.</strong> Some decisions are two-way doors: walk through, and if you don't like the room, walk back out. Some are one-way doors: once through, there's no going back. The most common decision error is using one speed for both — agonizing over two-way doors and breezing through one-way doors. Match the deliberation to the door: reversible means decide fast and learn; irreversible means slow down and run the full checklist.</p>
+<p class="hios-section-li"><strong>The weather forecast.</strong> Every decision is secretly a prediction — 'if I do X, Y will probably happen.' Nobody expects a forecaster to be right every day; we expect them to be calibrated. That's the target for you too. Not certainty — calibration. It changes the question from 'What's guaranteed?' (nothing) to 'What are the odds, and is the bet worth it?'</p>
+<p class="hios-section-li"><strong>The judge's standard of proof.</strong> Courts don't use one bar for everything — a traffic ticket needs less proof than a murder trial. Neither should you. Small, reversible, cheap: decide on a hunch and move. Large, irreversible, expensive: demand beyond-reasonable-doubt.</p>
+<h3 class="hios-section-h3">The Toolkit</h3>
+<p class="hios-section-li"><strong>The state gate.</strong> First question, always: am I Hungry, Angry, Lonely, or Tired? Depleted states shrink every option and inflate every threat. Rule: no one-way doors get opened in a bad state.</p>
+<p class="hios-section-li"><strong>10 / 10 / 10.</strong> How will I feel about this in 10 minutes? 10 months? 10 years? This one question drags the long-term you into a room currently occupied only by the short-term you and his emotions.</p>
+<p class="hios-section-li"><strong>The pre-mortem.</strong> Before committing, say: 'It's twelve months from now and this decision failed badly. Tell the story of why.' The brain is terrible at spotting risks in a plan it likes — borrow that talent in advance.</p>
+<p class="hios-section-li"><strong>The other chairs.</strong> Run the two-minute drill from Module 03: what does this decision look like from the other party's chair, a neutral observer's, a competitor's, a coach's?</p>
+<p class="hios-section-li"><strong>Fear test vs. values test.</strong> Ask: 'What would I do if I weren't afraid?' and 'What would the person I'm trying to become do?' When both answers match and the decision doesn't — you've found fear steering, dressed up as prudence.</p>
+<h3 class="hios-section-h3">The Practice — The Decision Journal</h3>
+<p class="hios-section-p">For every meaningful decision, write five lines before you act: (1) the decision, (2) the state I'm in right now, (3) what I expect to happen and how confident I am, (4) what would have to be true for this to fail, (5) door type — one-way or two-way. Then set a reminder for 90 days and review. This turns every decision, win or lose, into a rep instead of a verdict. <em>One-sentence takeaway: The scoreboard lies in the short run — outcomes are decisions plus luck — so the professionals stop keeping score on results and start keeping score on process, and the results follow on a delay.</em></p>
+</div>
+<div class="hios-module-content" id="hios-mod-08" style="display:none">
+<h2 class="hios-mod-title">08 · Influence OS</h2>
+<p class="hios-mod-tagline">Influence in service is leadership. Influence at expense is manipulation.</p>
+<div class="hios-divider"></div>
+<h3 class="hios-section-h3">The Idea in Plain English</h3>
+<p class="hios-section-p">Influence is inevitable — every word you speak aims someone's flashlight. The only question is whether their interests are in the frame. Some people flinch at the word 'influence,' as if the ethical move were to have none. That option doesn't exist. Module 05 proved that words direct attention. Module 01 proved that attention directs what people find. You are always influencing — the only variable is whether you're doing it consciously and ethically, or unconsciously and at their expense.</p>
+<h3 class="hios-section-h3">The Bright-Line Test</h3>
+<p class="hios-section-p">Would this still work if the other person could see exactly what you're doing and why? Yes: it's leadership — proceed. No: it's manipulation — and it's renting short-term wins by burning the only asset that compounds: trust. Manipulation is linear income: it works once, and it burns the asset that produced it. Ethical influence is residual income: it works repeatedly and the asset appreciates with each use.</p>
+<h3 class="hios-section-h3">The Tools — and Why They Pass the Test</h3>
+<p class="hios-section-li"><strong>Labeling.</strong> 'It seems like you're worried this won't get implemented.' You're proving out loud that you watched their camera (Module 03). Fully visible, fully ethical — and it works because it makes the other person feel accurately seen.</p>
+<p class="hios-section-li"><strong>No-oriented questions.</strong> 'Is it a bad idea to look at the numbers together?' gives the other person the safety of 'no' — protection, not pressure. It works because it respects their autonomy.</p>
+<p class="hios-section-li"><strong>Calibrated questions.</strong> 'How am I supposed to do that?' 'What about this works for you?' Open questions that invite the other person to solve the problem. They feel heard; you get information.</p>
+<p class="hios-section-li"><strong>The honest downside.</strong> Volunteering what's imperfect about your offer before they find it. It feels like giving up ammunition; it's actually the fastest trust-builder available.</p>
+<p class="hios-section-li"><strong>Mirroring.</strong> Repeat the last three words (or the key words) of what someone said, as a question. It signals you heard them and invites them to expand. Simple, invisible, effective.</p>
+<h3 class="hios-section-h3">The Practice</h3>
+<p class="hios-section-p">Before any influence attempt, run the bright-line test: would this still work if they could see exactly what I'm doing and why? If yes, proceed with full commitment. If no, redesign. The goal is to become the person whose influence people welcome — because they've learned that when you aim their flashlight, it's always toward something good for them. <em>One-sentence takeaway: Every tool in this guide passes through one gate before you use it on another person — would this still work if they could see exactly what you're doing and why? — and if the answer is yes, it's leadership; if no, it's manipulation.</em></p>
+</div>
+<div class="hios-module-content" id="hios-mod-09" style="display:none">
+<h2 class="hios-mod-title">09 · AI Leverage OS</h2>
+<p class="hios-mod-tagline">The advantage belongs to the better operator, not whoever knows which button to push.</p>
+<div class="hios-divider"></div>
+<h3 class="hios-section-h3">The Idea in Plain English</h3>
+<p class="hios-section-p">AI is not a search engine upgrade. It is a thinking partner that can hold more context, run more scenarios, and process more information than any human — but only if you know how to brief it. The people who will win with AI are not the ones who know the most prompts. They are the ones who think most clearly — because AI scales whatever you feed it. If you feed it clear thinking, you get clear output multiplied. If you feed it muddled thinking, you get muddled output at scale.</p>
+<h3 class="hios-section-h3">Analogies That Make It Stick</h3>
+<p class="hios-section-li"><strong>The brilliant intern.</strong> AI is like a brilliant intern with zero context about your situation. It has read everything — but it knows nothing about you, your goals, your constraints, or your history. Brief it like you'd brief that intern: goal, situation, constraints, what you've already tried. The quality of the output is a direct function of the quality of the brief.</p>
+<p class="hios-section-li"><strong>The multiplier, not the replacement.</strong> A 10x multiplier on 1 is still 10. A 10x multiplier on 10 is 100. AI multiplies what you bring to it. This is why the modules before this one matter — they are the base number. AI is the multiplier.</p>
+<p class="hios-section-li"><strong>The outsource test.</strong> Outsource the labor, never the judgment. AI can draft, analyze, simulate, and generate — but the decision about what matters, what's true, and what to do next is yours. The moment you outsource the judgment, you've handed the wheel to an autocomplete.</p>
+<h3 class="hios-section-h3">The Five Roles</h3>
+<p class="hios-section-li"><strong>Strategist.</strong> 'Here's my situation and goal. What am I missing? What would you do? Argue against yourself.' Use it to stress-test plans before you commit.</p>
+<p class="hios-section-li"><strong>Coach.</strong> 'I'm about to have a difficult conversation. Here's the context. Run the four chairs with me.' Use it to prepare for high-stakes human interactions.</p>
+<p class="hios-section-li"><strong>Analyst.</strong> 'Here's the data. What patterns do you see? What's the most important number here?' Use it to process information faster than you could alone.</p>
+<p class="hios-section-li"><strong>Trainer.</strong> 'Teach me this concept. Then quiz me until I can explain it back clearly.' Use it to compress the learning ladder (Module 04).</p>
+<p class="hios-section-li"><strong>Execution partner.</strong> 'Here's the task. Here's the standard. Draft the first version.' Use it to eliminate blank-page paralysis and get to iteration faster.</p>
+<h3 class="hios-section-h3">The Practice</h3>
+<p class="hios-section-p">Use the one-skeleton prompt: GOAL — SITUATION — CONSTRAINTS — 'argue against yourself.' That four-part structure turns any AI interaction from a search query into a thinking partnership. The loop that makes it compound: use AI to learn faster (Module 04), which improves the quality of what you feed it, which improves the output, which accelerates the next learning cycle. <em>One-sentence takeaway: Brief AI like a brilliant intern with zero context — goal, situation, constraints, argue against yourself — and outsource the labor, never the judgment.</em></p>
+</div>
+<div class="hios-module-content" id="hios-mod-10" style="display:none">
+<h2 class="hios-mod-title">10 · The Cheat Sheet</h2>
+<p class="hios-mod-tagline">Ten operating commands that run the whole system.</p>
+<div class="hios-divider"></div>
+<h3 class="hios-section-h3">The Complete Operating System</h3>
+<p class="hios-section-p">Print this. Teach it. Practice it. Each command below is a whole module compressed to a reflex. The short line is what you memorize; the paragraph is what it means when it's 2 p.m., the deal is wobbling, and you have four seconds to run the right command.</p>
+<h3 class="hios-section-h3">The Ten Commands</h3>
+<p class="hios-section-li"><strong>Drop the haze</strong> — separate reaction from reality. (Module 00.) The first thing you feel about any situation is the trailer, not the movie. Before acting, insert one beat: 'That's my edit. What did the camera actually record?'</p>
+<p class="hios-section-li"><strong>Regulate state</strong> — calm the system before you trust the thought. (Module 02.) Run HALT — hungry, angry, lonely, tired — and fix the body before you believe the brain.</p>
+<p class="hios-section-li"><strong>Control attention</strong> — find the next highest-leverage focus. (Module 01.) Before every block of time: 'What am I hunting for in the next 30 minutes?'</p>
+<p class="hios-section-li"><strong>Learn in layers</strong> — exposure → recognition → structure → action. (Module 04.) Pass one installs hooks and feels like failure. Nobody skips the ladder — the pros just stopped mislabeling rung one.</p>
+<p class="hios-section-li"><strong>Upgrade language</strong> — replace shutdown labels with learning labels. (Module 05.) Catch the five alarm words — can't, impossible, terrible, never, always — and swap on contact.</p>
+<p class="hios-section-li"><strong>Step behind the glass</strong> — run the four viewpoints. (Module 03.) Their chair, the neutral observer, the competitor, the coach — one sentence each, two minutes total.</p>
+<p class="hios-section-li"><strong>Map the paradigm</strong> — find the frame filtering the facts. (Module 06.) When the same result keeps repeating, stop blaming the photos and check the lens.</p>
+<p class="hios-section-li"><strong>Influence ethically</strong> — use the bright-line test, every time. (Module 08.) Would this still work if they could see exactly what you're doing and why?</p>
+<p class="hios-section-li"><strong>Use AI to multiply</strong> — strategist, coach, analyst, trainer, execution partner. (Module 09.) Brief it like a brilliant intern with zero context: goal, situation, constraints, 'argue against yourself.'</p>
+<p class="hios-section-li"><strong>Act</strong> — convert insight into the next useful move. (Module 07.) Insight that doesn't become a decision is entertainment. Match speed to the door and move.</p>
+</div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  // ===== STUDY PORTAL FUNCTIONS =====
+  window.hiosOpenPortal = function(moduleKey) {
+    var overlay = document.getElementById('hiosPortal');
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    hiosShowModule(moduleKey || '00');
+  };
+  
+  window.hiosClosePortal = function() {
+    var overlay = document.getElementById('hiosPortal');
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+  };
+  
+  // Close on overlay click
+  document.getElementById('hiosPortal').addEventListener('click', function(e) {
+    if (e.target === this) hiosClosePortal();
+  });
+  
+  // Close on Escape
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') hiosClosePortal();
+  });
+  
+  window.hiosShowModule = function(key) {
+    // Hide all content
+    document.querySelectorAll('.hios-module-content').forEach(function(el) {
+      el.classList.remove('active');
+      el.style.display = 'none';
+    });
+    // Show selected
+    var target = document.getElementById('hios-mod-' + key);
+    if (target) {
+      target.style.display = 'block';
+      target.classList.add('active');
+      // Scroll to top
+      var content = document.getElementById('hiosPortalContent');
+      if (content) content.scrollTop = 0;
+    }
+    // Update nav
+    document.querySelectorAll('.hios-nav-item').forEach(function(el) {
+      el.classList.remove('active');
+    });
+    var navItem = document.querySelector('.hios-nav-item[data-module="' + key + '"]');
+    if (navItem) navItem.classList.add('active');
+  };
+  
+  // ===== ACCORDION INJECTION =====
+  // Accordion content data
+  var ACCORDION_DATA = {"00": "<div class=\"hios-acc-body\" id=\"hios-acc-00\">\n<p class=\"hios-acc-tagline\">You don't see reality. You see what survives your filters.</p>\n<h4 class=\"hios-acc-h4\">The Idea in Plain English</h4>\n<p class=\"hios-acc-p\">Perception is not a recording of the world \u2014 it is a construction. Your senses take in an estimated eleven million bits of information every second. Your conscious mind processes somewhere around forty of them. That means more than 99.999% of reality is filtered out, discarded, or rewritten before you ever experience a single thing. You are never s...</p>\n<h4 class=\"hios-acc-h4\">Analogies That Make It Stick</h4>\n<p class=\"hios-acc-li\"><strong>The trailer vs. the movie.</strong> The forty bits you receive are the trailer \u2014 a curated highlight reel assembled by a brain that already has opinions. The movie is eleven million bits long and you never see it. Most people negotiate with the trailer as if it were the full film.</p>\n<p class=\"hios-acc-li\"><strong>The map vs. the territory.</strong> Everyone is navigating a personal map and mistaking it for the territory. The moment you can see your own map as a map, you can redraw it, question it, or borrow someone else's. That is the whole game.</p>\n<p class=\"hios-acc-li\"><strong>The autocomplete brain.</strong> Your brain doesn't wait for all the data before deciding what it sees \u2014 it autocompletes, the way a phone keyboard finishes your sentence. Most of the time it's right enough. The problem is when it's wrong and you never check, because the autocomplete felt like direct perception.</p>\n</div>\n", "01": "<div class=\"hios-acc-body\" id=\"hios-acc-01\">\n<p class=\"hios-acc-tagline\">Whatever runs your attention runs your life.</p>\n<h4 class=\"hios-acc-h4\">The Idea in Plain English</h4>\n<p class=\"hios-acc-p\">Attention is not passive \u2014 it is the most powerful filter in the system. Of the forty bits that make it through the Reality Gap, your attention decides which ones become conscious experience. Whatever you point your flashlight at, the brain amplifies. Whatever you ignore, it suppresses. This means attention is not just how you experience the world ...</p>\n<h4 class=\"hios-acc-h4\">Analogies That Make It Stick</h4>\n<p class=\"hios-acc-li\"><strong>The flashlight in a dark room.</strong> The room is full of objects, but you only see what the beam hits. Attention is the flashlight. You don't choose what's in the room \u2014 you choose where to point the light. Most people let the flashlight point itself.</p>\n<p class=\"hios-acc-li\"><strong>The search engine.</strong> Whatever you type into the search bar, the engine returns matching results. Attention works the same way. Tell your brain to find evidence that you're behind, and it will find it. Tell it to find the next move, and it will find that instead. The query determines the results.</p>\n<p class=\"hios-acc-li\"><strong>The spotter in the gym.</strong> A spotter doesn't lift the weight \u2014 they make sure the weight goes where it's supposed to go. Directed attention is the spotter for your thinking.</p>\n</div>\n", "02": "<div class=\"hios-acc-body\" id=\"hios-acc-02\">\n<p class=\"hios-acc-tagline\">Threat narrows perception. Calm widens it. State comes first.</p>\n<h4 class=\"hios-acc-h4\">The Idea in Plain English</h4>\n<p class=\"hios-acc-p\">Your physical and emotional state is not a background condition \u2014 it is a filter that runs on top of everything else in this system. A brain in threat mode and a brain in calm mode are not the same instrument. Threat mode narrows perception, shrinks the option set, and hands control to the oldest, most reactive part of the brain. Calm mode widens p...</p>\n<h4 class=\"hios-acc-h4\">Analogies That Make It Stick</h4>\n<p class=\"hios-acc-li\"><strong>The smoke alarm.</strong> The threat system is a smoke alarm \u2014 it's designed to be fast and loud, not accurate. It can't tell the difference between a house fire and burnt toast. When it goes off, it pulls resources away from the thinking brain and hands them to the survival brain. Smart engineering \u2014 when a bear is chasing you, you don't need calculus. The problem: the smoke alarm can't tell a bear from a difficult conversation.</p>\n<p class=\"hios-acc-li\"><strong>The instrument panel in turbulence.</strong> A pilot in turbulence has the same instruments as a pilot in clear air \u2014 but in turbulence, the readings are harder to trust and the inputs are harder to control. State is the turbulence. Calm state is clear air. You can fly in both, but you need to know which one you're in.</p>\n<p class=\"hios-acc-li\"><strong>The 5 p.m. problem.</strong> The problem that looked fatal at 5 p.m. is routinely solvable at 8 a.m. \u2014 and nothing about the problem changed. What changed was the state of the instrument reading it.</p>\n</div>\n", "03": "<div class=\"hios-acc-body\" id=\"hios-acc-03\">\n<p class=\"hios-acc-tagline\">Perception is the view from inside your head. Perspective is the ability to step outside it.</p>\n<h4 class=\"hios-acc-h4\">The Idea in Plain English</h4>\n<p class=\"hios-acc-p\">Every person in every interaction is looking at the same situation from a different camera angle. The amateur tries to convince the other person to see their angle. The professional steps behind the glass and runs all the cameras simultaneously. This is not empathy as a soft skill \u2014 it is a cognitive capability that produces better information, bet...</p>\n<h4 class=\"hios-acc-h4\">The Amateur Convinces. The Professional Sees.</h4>\n<p class=\"hios-acc-p\">The amateur walks into a negotiation, a sales conversation, or a difficult discussion with one goal: get the other person to see what I see. The professional walks in with a different goal: understand what they see so completely that I can use it. The amateur is running one camera. The professional is running four. The best map in the room wins \u2014 a...</p>\n</div>\n", "04": "<div class=\"hios-acc-body\" id=\"hios-acc-04\">\n<p class=\"hios-acc-tagline\">Real learning starts with exposure, not mastery.</p>\n<h4 class=\"hios-acc-h4\">The Idea in Plain English</h4>\n<p class=\"hios-acc-p\">Most people misunderstand how learning works \u2014 and that misunderstanding causes them to quit at exactly the wrong moment. Learning is not a straight line from ignorance to competence. It is a layered process that requires multiple passes, and the first pass is supposed to feel like failure. The coat hook principle explains why: new information has ...</p>\n<h4 class=\"hios-acc-h4\">The Coat Hook Principle</h4>\n<p class=\"hios-acc-p\">Imagine a bare wall. You throw a coat at it. It falls. You throw another. It falls. You throw ten coats \u2014 they all fall. You conclude: this wall doesn't hold coats. But the wall isn't the problem. The hooks aren't there yet. Pass one of learning installs the hooks. Pass two, a few things catch. Pass three, the shape of the whole thing appears. Pass...</p>\n</div>\n", "05": "<div class=\"hios-acc-body\" id=\"hios-acc-05\">\n<p class=\"hios-acc-tagline\">The brain follows the label. Choose the label.</p>\n<h4 class=\"hios-acc-h4\">The Idea in Plain English</h4>\n<p class=\"hios-acc-p\">Language is not just how you describe your experience \u2014 it is how you construct it. The label you put on a moment determines what your brain searches for next. 'I can't do this' sends the brain hunting for evidence of inability. 'I haven't found the way in yet' sends it hunting for entry points. Same moment. Different search. Different results. Thi...</p>\n<h4 class=\"hios-acc-h4\">The Two-Mode Brain</h4>\n<p class=\"hios-acc-p\">Threat mode is the older system \u2014 the smoke alarm. Its playbook has exactly three moves: fight, flee, freeze. When it takes over, it pulls resources away from the part of your brain that solves complex problems. The smoke alarm can't tell a bear from a spreadsheet you don't understand. It only reads the label you feed it. And 'I can't do this' read...</p>\n</div>\n", "06": "<div class=\"hios-acc-body\" id=\"hios-acc-06\">\n<p class=\"hios-acc-tagline\">The paradigm is the layer below everything \u2014 it filters what a person can even accept as possible.</p>\n<h4 class=\"hios-acc-h4\">The Idea in Plain English</h4>\n<p class=\"hios-acc-p\">A paradigm is not a belief \u2014 it is the frame that makes certain beliefs feel like facts. It operates below the level of conscious thought, which is why it's so hard to see. The Reality Gap (Module 00) showed us that perception is filtered. The paradigm is the filter behind the filter \u2014 the assumption so deep it doesn't feel like an assumption. It f...</p>\n<h4 class=\"hios-acc-h4\">Analogies That Make It Stick</h4>\n<p class=\"hios-acc-li\"><strong>The camera lens vs. the photograph.</strong> A paradigm is not a photo \u2014 it's the lens. The photo can be wrong and you can see it. The lens distorts everything and you never notice, because you're always looking through it, never at it.</p>\n<p class=\"hios-acc-li\"><strong>The fish and the water.</strong> A fish doesn't know it's in water \u2014 water is just the world. A paradigm is the water. The moment you can name it, you're no longer fully inside it.</p>\n<p class=\"hios-acc-li\"><strong>The operating system, not the app.</strong> Beliefs are apps. A paradigm is the OS. You can update the apps all you want \u2014 if the OS is running a bad assumption, the apps will keep producing the same output.</p>\n</div>\n", "07": "<div class=\"hios-acc-body\" id=\"hios-acc-07\">\n<p class=\"hios-acc-tagline\">Smart people make bad calls \u2014 here's the operating system that fixes it.</p>\n<h4 class=\"hios-acc-h4\">The Idea in Plain English</h4>\n<p class=\"hios-acc-p\">You can't control outcomes. You can only control decision quality \u2014 and decision quality is a process you can rep. Everything in the system funnels into this module, because thinking clearly is worthless until it becomes a choice. The single most important idea: a good decision and a good outcome are not the same thing. Poker players have a word fo...</p>\n<h4 class=\"hios-acc-h4\">Analogies That Make It Stick</h4>\n<p class=\"hios-acc-li\"><strong>The two kinds of doors.</strong> Some decisions are two-way doors: walk through, and if you don't like the room, walk back out. Some are one-way doors: once through, there's no going back. The most common decision error is using one speed for both \u2014 agonizing over two-way doors and breezing through one-way doors. Match the deliberation to the door: reversible means decide fast and learn; irreversible means slow down and run the full checklist.</p>\n<p class=\"hios-acc-li\"><strong>The weather forecast.</strong> Every decision is secretly a prediction \u2014 'if I do X, Y will probably happen.' Nobody expects a forecaster to be right every day; we expect them to be calibrated. That's the target for you too. Not certainty \u2014 calibration. It changes the question from 'What's guaranteed?' (nothing) to 'What are the odds, and is the bet worth it?'</p>\n<p class=\"hios-acc-li\"><strong>The judge's standard of proof.</strong> Courts don't use one bar for everything \u2014 a traffic ticket needs less proof than a murder trial. Neither should you. Small, reversible, cheap: decide on a hunch and move. Large, irreversible, expensive: demand beyond-reasonable-doubt.</p>\n</div>\n", "08": "<div class=\"hios-acc-body\" id=\"hios-acc-08\">\n<p class=\"hios-acc-tagline\">Influence in service is leadership. Influence at expense is manipulation.</p>\n<h4 class=\"hios-acc-h4\">The Idea in Plain English</h4>\n<p class=\"hios-acc-p\">Influence is inevitable \u2014 every word you speak aims someone's flashlight. The only question is whether their interests are in the frame. Some people flinch at the word 'influence,' as if the ethical move were to have none. That option doesn't exist. Module 05 proved that words direct attention. Module 01 proved that attention directs what people fi...</p>\n<h4 class=\"hios-acc-h4\">The Bright-Line Test</h4>\n<p class=\"hios-acc-p\">Would this still work if the other person could see exactly what you're doing and why? Yes: it's leadership \u2014 proceed. No: it's manipulation \u2014 and it's renting short-term wins by burning the only asset that compounds: trust. Manipulation is linear income: it works once, and it burns the asset that produced it. Ethical influence is residual income: ...</p>\n</div>\n", "09": "<div class=\"hios-acc-body\" id=\"hios-acc-09\">\n<p class=\"hios-acc-tagline\">The advantage belongs to the better operator, not whoever knows which button to push.</p>\n<h4 class=\"hios-acc-h4\">The Idea in Plain English</h4>\n<p class=\"hios-acc-p\">AI is not a search engine upgrade. It is a thinking partner that can hold more context, run more scenarios, and process more information than any human \u2014 but only if you know how to brief it. The people who will win with AI are not the ones who know the most prompts. They are the ones who think most clearly \u2014 because AI scales whatever you feed it....</p>\n<h4 class=\"hios-acc-h4\">Analogies That Make It Stick</h4>\n<p class=\"hios-acc-li\"><strong>The brilliant intern.</strong> AI is like a brilliant intern with zero context about your situation. It has read everything \u2014 but it knows nothing about you, your goals, your constraints, or your history. Brief it like you'd brief that intern: goal, situation, constraints, what you've already tried. The quality of the output is a direct function of the quality of the brief.</p>\n<p class=\"hios-acc-li\"><strong>The multiplier, not the replacement.</strong> A 10x multiplier on 1 is still 10. A 10x multiplier on 10 is 100. AI multiplies what you bring to it. This is why the modules before this one matter \u2014 they are the base number. AI is the multiplier.</p>\n<p class=\"hios-acc-li\"><strong>The outsource test.</strong> Outsource the labor, never the judgment. AI can draft, analyze, simulate, and generate \u2014 but the decision about what matters, what's true, and what to do next is yours. The moment you outsource the judgment, you've handed the wheel to an autocomplete.</p>\n</div>\n", "10": "<div class=\"hios-acc-body\" id=\"hios-acc-10\">\n<p class=\"hios-acc-tagline\">Ten operating commands that run the whole system.</p>\n<h4 class=\"hios-acc-h4\">The Complete Operating System</h4>\n<p class=\"hios-acc-p\">Print this. Teach it. Practice it. Each command below is a whole module compressed to a reflex. The short line is what you memorize; the paragraph is what it means when it's 2 p.m., the deal is wobbling, and you have four seconds to run the right command.</p>\n<h4 class=\"hios-acc-h4\">The Ten Commands</h4>\n<p class=\"hios-acc-li\"><strong>Drop the haze</strong> \u2014 separate reaction from reality. (Module 00.) The first thing you feel about any situation is the trailer, not the movie. Before acting, insert one beat: 'That's my edit. What did the camera actually record?'</p>\n<p class=\"hios-acc-li\"><strong>Regulate state</strong> \u2014 calm the system before you trust the thought. (Module 02.) Run HALT \u2014 hungry, angry, lonely, tired \u2014 and fix the body before you believe the brain.</p>\n<p class=\"hios-acc-li\"><strong>Control attention</strong> \u2014 find the next highest-leverage focus. (Module 01.) Before every block of time: 'What am I hunting for in the next 30 minutes?'</p>\n</div>\n"};
+  
+  // Module key mapping by index
+  var MODULE_KEYS = {
+    '00': '00', '01': '01', '02': '02', '03': '03', '04': '04',
+    '05': '05', '06': '06', '07': '07', '08': '08', '09': '09', '10': '10'
+  };
+  
+  // Map from card title keywords to module keys
+  var TITLE_TO_KEY = {
+    'Reality Gap': '00',
+    'Attention OS': '01', 'Attention': '01',
+    'State OS': '02', 'State': '02',
+    'Perspective OS': '03', 'Perspective': '03',
+    'Learning OS': '04', 'Learning': '04',
+    'Language OS': '05', 'Language': '05',
+    'Paradigm OS': '06', 'Paradigm': '06',
+    'Decision OS': '07', 'Decision': '07',
+    'Influence OS': '08', 'Influence': '08',
+    'AI Leverage OS': '09', 'AI Leverage': '09',
+    'Cheat Sheet': '10'
+  };
+  
+  function getModuleKeyFromCard(card) {
+    var text = card.innerText || card.textContent;
+    for (var title in TITLE_TO_KEY) {
+      if (text.indexOf(title) >= 0) return TITLE_TO_KEY[title];
+    }
+    // Try index numbers
+    var match = text.match(/\b(0[0-9]|10)\b/);
+    if (match) return match[1];
+    return null;
+  }
+  
+  function injectAccordions() {
+    // Find module cards - they typically have a number badge and title
+    // Look for cards that contain module index numbers
+    var cards = document.querySelectorAll('[class*="rounded"][class*="border"], [class*="card"], [class*="module"]');
+    var injected = 0;
+    
+    cards.forEach(function(card) {
+      // Skip if already injected
+      if (card.querySelector('.hios-acc-trigger')) return;
+      
+      var key = getModuleKeyFromCard(card);
+      if (!key || !ACCORDION_DATA[key]) return;
+      
+      // Find the bottom of the card content to inject accordion
+      // Look for the last text element in the card
+      var cardInner = card;
+      
+      // Create accordion trigger button
+      var trigger = document.createElement('button');
+      trigger.className = 'hios-acc-trigger';
+      trigger.setAttribute('aria-expanded', 'false');
+      trigger.innerHTML = '<span style="font-family:DM Sans,sans-serif;font-size:12px;color:rgba(232,244,241,0.5);font-weight:500;">Expand module</span><span class="hios-acc-arrow">▾</span>';
+      
+      // Create accordion body
+      var body = document.createElement('div');
+      body.className = 'hios-acc-body';
+      body.innerHTML = ACCORDION_DATA[key];
+      
+      // Add study portal link inside accordion
+      var studyLink = document.createElement('a');
+      studyLink.className = 'hios-acc-study-link';
+      studyLink.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg> Study Full Module';
+      studyLink.href = '#';
+      studyLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        hiosOpenPortal(key);
+      });
+      body.appendChild(studyLink);
+      
+      // Toggle function
+      trigger.addEventListener('click', function() {
+        var isOpen = body.classList.contains('open');
+        body.classList.toggle('open');
+        trigger.querySelector('.hios-acc-arrow').classList.toggle('open');
+        trigger.setAttribute('aria-expanded', !isOpen);
+      });
+      
+      // Append to card
+      cardInner.appendChild(trigger);
+      cardInner.appendChild(body);
+      injected++;
+    });
+    
+    return injected;
+  }
+  
+  // Run accordion injection after React renders
+  var attempts = 0;
+  function tryInject() {
+    var injected = injectAccordions();
+    attempts++;
+    if (injected < 5 && attempts < 20) {
+      setTimeout(tryInject, 400);
+    }
+  }
+  
+  // Start after DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() { setTimeout(tryInject, 600); });
+  } else {
+    setTimeout(tryInject, 600);
+  }
+  
+  // Also use MutationObserver for React renders
+  var observer = new MutationObserver(function() {
+    if (document.querySelectorAll('[class*="rounded"][class*="border"]').length > 3) {
+      setTimeout(function() {
+        injectAccordions();
+      }, 200);
+    }
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+  setTimeout(function() { observer.disconnect(); }, 10000);
+  
+})();
+</script>
+<!-- END HIOS INJECTION -->
+
+</body>
 
 </html>
