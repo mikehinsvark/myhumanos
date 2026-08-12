@@ -1333,6 +1333,48 @@ Error generating stack: `+l.message+`
   obs.observe(document.body, { childList:true, subtree:true });
 })();
 </script>
-<!-- END HIOS INJECTION --></body>
+<!-- END HIOS INJECTION -->
+<style id="humanos-premium-canvas">
+  html { background: #01040a; }
+  body { min-height: 100vh; background: radial-gradient(ellipse at 50% 0%, #0b2037 0%, #020812 37%, #01040a 100%); }
+  body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: .22; background-image: linear-gradient(rgba(22,231,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(22,231,255,.035) 1px, transparent 1px); background-size: 100% 88px, 124px 100%; mask-image: linear-gradient(to bottom, #000, transparent 90%); }
+  #root { position: relative; width: min(100%, 1400px); min-height: 100vh; margin: 0 auto; overflow: hidden; background: #020812; border-right: 1px solid rgba(22,231,255,.13); border-left: 1px solid rgba(22,231,255,.13); box-shadow: 0 0 0 1px rgba(168,117,255,.035), 0 0 145px rgba(0,0,0,.66); }
+  .hios-floating-explainer { position: fixed; right: max(22px, calc((100vw - 1400px) / 2 + 24px)); bottom: 24px; z-index: 2147483000; display: inline-flex; align-items: center; gap: 12px; min-height: 56px; padding: 0 21px 0 15px; color: #08111a; border: 1px solid rgba(255,245,201,.86); background: linear-gradient(110deg, #ffdc7e, #ffbd42); box-shadow: 0 15px 32px rgba(0,0,0,.44), 0 0 26px rgba(255,203,85,.27); cursor: pointer; font: 800 12px/1 "Space Grotesk", sans-serif; letter-spacing: .35px; transition: transform .18s ease, box-shadow .18s ease; }
+  .hios-floating-explainer:hover { transform: translateY(-3px); box-shadow: 0 19px 38px rgba(0,0,0,.52), 0 0 34px rgba(255,203,85,.42); }
+  .hios-floating-explainer:active { transform: scale(.97); }
+  .hios-floating-explainer__icon { display: grid; place-items: center; width: 29px; height: 29px; border-radius: 999px; color: #ffdc79; background: #071526; box-shadow: inset 0 0 0 1px rgba(255,255,255,.1); }
+  .hios-explainer-modal { position: fixed; inset: 0; z-index: 2147483001; display: grid; place-items: center; padding: 28px; background: rgba(0,4,11,.88); backdrop-filter: blur(13px); }
+  .hios-explainer-modal[hidden] { display: none; }
+  .hios-explainer-dialog { position: relative; width: min(1200px, 100%); border: 1px solid rgba(22,231,255,.38); background: #020812; box-shadow: 0 0 0 1px rgba(168,117,255,.12), 0 28px 100px rgba(0,0,0,.72); }
+  .hios-explainer-dialog video { display: block; width: 100%; max-height: calc(100vh - 110px); background: #000; }
+  .hios-explainer-close { position: absolute; top: -15px; right: -15px; z-index: 2; display: grid; place-items: center; width: 42px; height: 42px; color: #fff; border: 1px solid rgba(22,231,255,.65); background: #071526; box-shadow: 0 0 22px rgba(22,231,255,.22); cursor: pointer; font: 700 22px/1 sans-serif; }
+  @media (max-width: 1000px) { #root { width: 100%; border-right: 0; border-left: 0; } }
+  @media (max-width: 650px) { .hios-floating-explainer { right: 14px; bottom: 14px; left: 14px; justify-content: center; min-height: 50px; font-size: 11px; } .hios-explainer-modal { padding: 18px; } }
+</style>
+<button id="hiosFloatingExplainer" class="hios-floating-explainer" type="button" aria-label="Play the HumanOS video explainer">
+  <span class="hios-floating-explainer__icon">▶</span><span>Play the Video Explainer</span>
+</button>
+<div id="hiosExplainerModal" class="hios-explainer-modal" role="dialog" aria-modal="true" aria-label="HumanOS Perspective Lift explainer" hidden>
+  <div class="hios-explainer-dialog">
+    <button id="hiosExplainerClose" class="hios-explainer-close" type="button" aria-label="Close video">×</button>
+    <video id="hiosExplainerVideo" controls playsinline preload="metadata" src="https://humanosys-j4vsrj26.manus.space/manus-storage/humanos-perspective-lift-final_4afc6a48.mp4">Your browser does not support the video tag.</video>
+  </div>
+</div>
+<script id="humanos-explainer-launcher">
+  (function () {
+    var open = document.getElementById('hiosFloatingExplainer');
+    var modal = document.getElementById('hiosExplainerModal');
+    var close = document.getElementById('hiosExplainerClose');
+    var video = document.getElementById('hiosExplainerVideo');
+    if (!open || !modal || !close || !video) return;
+    function openExplainer() { modal.hidden = false; document.body.style.overflow = 'hidden'; video.play().catch(function () {}); }
+    function closeExplainer() { modal.hidden = true; document.body.style.overflow = ''; video.pause(); }
+    open.addEventListener('click', openExplainer);
+    close.addEventListener('click', closeExplainer);
+    modal.addEventListener('click', function (event) { if (event.target === modal) closeExplainer(); });
+    document.addEventListener('keydown', function (event) { if (event.key === 'Escape' && !modal.hidden) closeExplainer(); });
+  })();
+</script>
+</body>
 
 </html>
