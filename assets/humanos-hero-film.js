@@ -1,8 +1,35 @@
 (() => {
-  const FEATURE_VIDEO_SRC = "/manus-storage/humanos-bigger-picture-film.mp4";
+  const FEATURE_DESKTOP_SRC = "/manus-storage/humanos-bigger-picture-film.mp4";
+  const FEATURE_MOBILE_SRC = "/manus-storage/humanos-bigger-picture-film-mobile.mp4";
   const FEATURE_POSTER_SRC = "/manus-storage/humanos-bigger-picture-poster.webp";
-  const ORIGINAL_VIDEO_SRC = "/manus-storage/humanos-original-perspective-lift.mp4";
+  const ORIGINAL_DESKTOP_SRC = "/manus-storage/humanos-original-perspective-lift.mp4";
+  const ORIGINAL_MOBILE_SRC = "/manus-storage/humanos-original-perspective-lift-mobile.mp4";
   const ORIGINAL_POSTER_SRC = "/manus-storage/humanos-original-perspective-lift-poster.webp";
+  const MOBILE_MEDIA = window.matchMedia("(max-width: 820px), (pointer: coarse)");
+
+  const preferredSource = (desktop, mobile) => MOBILE_MEDIA.matches ? mobile : desktop;
+
+  function prepareInlineVideo(video) {
+    video.setAttribute("playsinline", "");
+    video.setAttribute("webkit-playsinline", "");
+    video.setAttribute("x-webkit-airplay", "allow");
+    video.controls = true;
+  }
+
+  function requestPlayback(video, frame) {
+    prepareInlineVideo(video);
+    frame?.classList.add("is-playing");
+    document.body.classList.add("hios-video-active");
+    const playback = video.play();
+    if (playback && typeof playback.catch === "function") {
+      playback.catch(() => {
+        frame?.classList.remove("is-playing");
+        document.body.classList.remove("hios-video-active");
+        video.controls = true;
+      });
+    }
+    return playback;
+  }
 
   function buildTakeawaySection(hero, playFeaturedFilm) {
     if (!hero || document.getElementById("film-takeaways")) return;
@@ -21,7 +48,7 @@
           </div>
           <button class="hios-replay-film" type="button" aria-label="Replay the featured 94-second film">
             <span class="hios-replay-icon">▶</span>
-            <span><strong>Replay the film</strong><small>94 seconds · Full HD</small></span>
+            <span><strong>Replay the film</strong><small>94 seconds · Mobile ready</small></span>
           </button>
         </div>
 
@@ -61,8 +88,7 @@
 
     hero.insertAdjacentElement("afterend", section);
     section.querySelector(".hios-replay-film").addEventListener("click", () => {
-      document.getElementById("hios-feature-film")?.scrollIntoView({ behavior: "smooth", block: "center" });
-      window.setTimeout(playFeaturedFilm, 420);
+      playFeaturedFilm(true);
     });
   }
 
@@ -79,7 +105,13 @@
       <span>Original 60-Second Film</span>`;
 
     watchButton.parentElement?.appendChild(button);
-    button.addEventListener("click", () => document.getElementById("hiosFloatingExplainer")?.click());
+    button.addEventListener("click", () => {
+      if (typeof window.hiosOpenOriginalExplainer === "function") {
+        window.hiosOpenOriginalExplainer();
+      } else {
+        document.getElementById("hiosFloatingExplainer")?.click();
+      }
+    });
   }
 
   function buildHeroFilm() {
@@ -89,6 +121,7 @@
     const currentVisual = currentImage.closest(".aspect-square");
     if (!currentVisual || document.getElementById("hios-feature-film")) return true;
 
+    const selectedFeatureSource = preferredSource(FEATURE_DESKTOP_SRC, FEATURE_MOBILE_SRC);
     const feature = document.createElement("div");
     feature.id = "hios-feature-film";
     feature.className = "bp-reveal";
@@ -99,8 +132,7 @@
           <span class="hios-feature-duration">HD · 01:34</span>
         </div>
         <div class="hios-feature-media">
-          <video id="hiosHeroFilm" controls playsinline preload="metadata" poster="${FEATURE_POSTER_SRC}" aria-label="A Bigger Picture. A Brighter Future. Dreams Business Resources film">
-            <source src="${FEATURE_VIDEO_SRC}" type="video/mp4" />
+          <video id="hiosHeroFilm" controls playsinline webkit-playsinline x-webkit-airplay="allow" preload="metadata" poster="${FEATURE_POSTER_SRC}" src="${selectedFeatureSource}" aria-label="A Bigger Picture. A Brighter Future. Dreams Business Resources film">
             Your browser does not support HTML video.
           </video>
           <button class="hios-feature-play" type="button" aria-label="Play A Bigger Picture. A Brighter Future"></button>
@@ -120,18 +152,27 @@
     const video = feature.querySelector("video");
     const play = feature.querySelector(".hios-feature-play");
     const hero = document.getElementById("hero");
+    prepareInlineVideo(video);
 
-    const playFilm = () => {
-      video.play().catch(() => {});
-      frame.classList.add("is-playing");
+    const playFilm = (shouldScroll = false) => {
+      // play() stays inside the actual click handler for strict iOS user-activation rules.
+      requestPlayback(video, frame);
+      if (shouldScroll) feature.scrollIntoView({ behavior: "smooth", block: "center" });
     };
 
-    play.addEventListener("click", playFilm);
-    video.addEventListener("play", () => frame.classList.add("is-playing"));
-    video.addEventListener("pause", () => {
-      if (video.currentTime < video.duration - .25) frame.classList.remove("is-playing");
+    play.addEventListener("click", () => playFilm(false));
+    video.addEventListener("play", () => {
+      frame.classList.add("is-playing");
+      document.body.classList.add("hios-video-active");
     });
-    video.addEventListener("ended", () => frame.classList.remove("is-playing"));
+    video.addEventListener("pause", () => {
+      if (!Number.isFinite(video.duration) || video.currentTime < video.duration - .25) frame.classList.remove("is-playing");
+      document.body.classList.remove("hios-video-active");
+    });
+    video.addEventListener("ended", () => {
+      frame.classList.remove("is-playing");
+      document.body.classList.remove("hios-video-active");
+    });
 
     const watchButton = [...document.querySelectorAll("a")].find((anchor) =>
       anchor.textContent.trim().includes("WATCH THE VIDEO")
@@ -142,17 +183,20 @@
       watchButton.removeAttribute("rel");
       watchButton.addEventListener("click", (event) => {
         event.preventDefault();
-        feature.scrollIntoView({ behavior: "smooth", block: "center" });
-        window.setTimeout(playFilm, 420);
+        playFilm(true);
       });
       addOriginalFilmButton(watchButton);
     }
 
     const modalVideo = document.getElementById("hiosExplainerVideo");
     if (modalVideo) {
-      modalVideo.src = ORIGINAL_VIDEO_SRC;
-      modalVideo.poster = ORIGINAL_POSTER_SRC;
-      modalVideo.load();
+      prepareInlineVideo(modalVideo);
+      const selectedOriginalSource = preferredSource(ORIGINAL_DESKTOP_SRC, ORIGINAL_MOBILE_SRC);
+      if (!modalVideo.src.endsWith(selectedOriginalSource)) {
+        modalVideo.src = selectedOriginalSource;
+        modalVideo.poster = ORIGINAL_POSTER_SRC;
+        modalVideo.load();
+      }
     }
 
     buildTakeawaySection(hero, playFilm);

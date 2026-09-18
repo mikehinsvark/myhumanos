@@ -1,4 +1,18 @@
 /* 94-second takeaway section + original film CTA */
+.hios-feature-play,
+.hios-original-film-btn,
+.hios-replay-film,
+.hios-explainer-close {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body.hios-video-active .hios-study-btn-float {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translateY(8px) !important;
+}
+
 .hios-original-film-btn {
   display: inline-flex;
   align-items: center;

@@ -15,7 +15,7 @@
     <script type="module" crossorigin src="assets/index-BFidk5l6.js"></script>
     <link rel="stylesheet" crossorigin href="assets/index-DnjEtf4P.css">
     <link rel="stylesheet" href="assets/humanos-hero-film.css?v=20260918b">
-    <link rel="stylesheet" href="assets/humanos-video-takeaways.css?v=20260918b">
+    <link rel="stylesheet" href="assets/humanos-video-takeaways.css?v=20260918c">
     <link rel="preload" as="image" href="manus-storage/humanos-bigger-picture-poster.webp" fetchpriority="high">
   <meta property="og:type" content="website">
 			<meta property="og:url" content="https://myhumanos.pro/">
@@ -1361,7 +1361,7 @@ Error generating stack: `+l.message+`
   <div class="hios-explainer-dialog">
     <button id="hiosExplainerClose" class="hios-explainer-close" type="button" aria-label="Close video">×</button>
     <div class="hios-explainer-topbar"><span>Original HumanOS Explainer</span><span>01:02</span></div>
-    <video id="hiosExplainerVideo" controls playsinline preload="metadata" poster="manus-storage/humanos-original-perspective-lift-poster.webp" src="manus-storage/humanos-original-perspective-lift.mp4">Your browser does not support the video tag.</video>
+    <video id="hiosExplainerVideo" controls playsinline webkit-playsinline x-webkit-airplay="allow" preload="metadata" poster="manus-storage/humanos-original-perspective-lift-poster.webp" src="manus-storage/humanos-original-perspective-lift.mp4">Your browser does not support the video tag.</video>
   </div>
 </div>
 <script id="humanos-explainer-launcher">
@@ -1371,15 +1371,25 @@ Error generating stack: `+l.message+`
     var close = document.getElementById('hiosExplainerClose');
     var video = document.getElementById('hiosExplainerVideo');
     if (!open || !modal || !close || !video) return;
-    function openExplainer() { modal.hidden = false; document.body.style.overflow = 'hidden'; video.play().catch(function () {}); }
-    function closeExplainer() { modal.hidden = true; document.body.style.overflow = ''; video.pause(); }
+    function openExplainer() {
+      modal.hidden = false;
+      document.body.style.overflow = 'hidden';
+      document.body.classList.add('hios-video-active');
+      video.setAttribute('playsinline', '');
+      video.setAttribute('webkit-playsinline', '');
+      var playback = video.play();
+      if (playback && typeof playback.catch === 'function') playback.catch(function () { video.controls = true; });
+    }
+    function closeExplainer() { modal.hidden = true; document.body.style.overflow = ''; document.body.classList.remove('hios-video-active'); video.pause(); }
+    window.hiosOpenOriginalExplainer = openExplainer;
+    window.hiosCloseOriginalExplainer = closeExplainer;
     open.addEventListener('click', openExplainer);
     close.addEventListener('click', closeExplainer);
     modal.addEventListener('click', function (event) { if (event.target === modal) closeExplainer(); });
     document.addEventListener('keydown', function (event) { if (event.key === 'Escape' && !modal.hidden) closeExplainer(); });
   })();
 </script>
-<script src="assets/humanos-hero-film.js?v=20260918b" defer></script>
+<script src="assets/humanos-hero-film.js?v=20260918c" defer></script>
 </body>
 
 </html>
